@@ -48,6 +48,11 @@ def statics(df, no_of_day):
     message_yesterday, message_today = message_count.tail(2)['count'].values
     day_price = df.groupby(['Date'])['price'].mean().reset_index().tail(no_of_day)
     price_yesterday, price_today = day_price.tail(2)['price'].values
+    
+    day_group_price = df.groupby(['Date','groupName'])['price'].mean().reset_index().tail(no_of_day)
+    day_price['groupName'] = 'All'
+    day_price = pd.concat([day_price, day_group_price], ignore_index=True)
+    
     return message_count, message_yesterday, message_today, day_price, price_yesterday, price_today
         
 # load data
@@ -160,15 +165,26 @@ while True:
                 title='Số lượng tin rao bán theo ngày'
             )
             st.plotly_chart(fig, use_container_width=True)
-        
-            fig = px.line(
-                data_frame=daily_price,
-                x='Date',
-                y='price',
-                markers=True,
-                title='Giá rao bán theo ngày'
-            )
-            st.plotly_chart(fig, use_container_width=True)
+
+            if group_selection == 'All':
+                fig = px.line(
+                    data_frame=daily_price,
+                    x='Date',
+                    y='price',
+                    color='groupName',
+                    markers=True,
+                    title='Giá rao bán theo ngày'
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            else:    
+                fig = px.line(
+                    data_frame=daily_price[daily_price['groupName'] == 'All'],
+                    x='Date',
+                    y='price',
+                    markers=True,
+                    title='Giá rao bán theo ngày'
+                )
+                st.plotly_chart(fig, use_container_width=True)
         with exr_table.container(border=True):
             st.markdown('##### Bảng tỉ giá')
             url = 'https://portal.vietcombank.com.vn/Usercontrols/TVPortal.TyGia/pXML.aspx'
